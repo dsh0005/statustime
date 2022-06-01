@@ -95,10 +95,13 @@ int print_time(const int charge_fd, const int charge_full_fd){
 	char sbuf[32];
 	const int charge = battery_charge(charge_fd, charge_full_fd);
 	const int preflen = snprintf(sbuf, sizeof(sbuf), "%d%% | ", charge);
-	if(preflen >= sizeof(sbuf)){
+	if(preflen < 0){
 		return 2;
-	}else if(preflen < 0){
-		return 3;
+	}else{
+		const unsigned int upreflen = preflen;
+		if(upreflen >= sizeof(sbuf)){
+			return 3;
+		}
 	}
 
 	size_t len;
