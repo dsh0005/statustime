@@ -1,3 +1,14 @@
+/* SPDX-License-Identifier: 0BSD */
+
+/* Copyright 2022, Douglas Storm Hill
+ *
+ * Provided under zero-clause-BSD license.
+ *
+ * Use it if you like it, modify it however you like.
+ * I _think_ I got all the bugs out, but you should review
+ * it for yourself before assuming it's safe.
+ */
+
 #include <threads.h>
 #include <time.h>
 #include <stdlib.h>
