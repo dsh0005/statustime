@@ -1,0 +1,28 @@
+.Dd $Mdocdate$
+.Dt STATUSTIME 1
+.Os
+.Sh NAME
+.Nm statustime
+.Nd display time every minute
+.Sh SYNOPSIS
+.Nm statustime
+.Sh DESCRIPTION
+.Nm
+prints the local time at the top of every minute.
+The battery charge percentage is also printed, if
+compiled in.
+.Sh FILES
+.Pa /sys/class/power_supply/BAT0/charge_now
+the battery's current charge
+
+.Pa /sys/class/power_supply/BAT0/charge_full
+the battery's full charge
+.Sh SEE ALSO
+.Xr date 1
+.Xr sleep 1
+.Xr acpitool 1
+.Sh AUTHORS
+Douglas Storm Hill
+.Sh BUGS
+.Nm
+probably will display the wrong time for a second, on negative leap seconds.
