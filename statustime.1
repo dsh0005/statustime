@@ -23,6 +23,12 @@ the battery's full charge
 .Xr acpitool 1
 .Sh AUTHORS
 Douglas Storm Hill
-.Sh BUGS
-.Nm
-probably will display the wrong time for a second, on negative leap seconds.
+.Sh CAVEATS
+Since it sleeps until the next minute,
+it's wrong for a second after a negative leap second.
+
+It assumes that your timezone is a multiple of 60 seconds
+offset from UTC.
+
+Suspend/resume doesn't trigger another output, leaving stale
+time (and battery) for up to a minute.
