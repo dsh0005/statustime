@@ -32,3 +32,10 @@ offset from UTC.
 
 Suspend/resume doesn't trigger another output, leaving stale
 time (and battery) for up to a minute.
+
+It assumes your battery shows up at
+.Pa /sys/class/power_supply/BAT0
+and uses a non-stable kernel API.
+
+It assumes that your battery capacity (in whatever units are
+used) times 100 fits in an int.
