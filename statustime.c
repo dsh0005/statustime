@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: 0BSD */
 
-/* Copyright 2022, Douglas Storm Hill
+/* Copyright 2022, 2023, Douglas Storm Hill
  *
  * Provided under zero-clause-BSD license.
  *
@@ -79,7 +79,9 @@ static inline int sleep_until_minute(void){
 	return ret;
 }
 
-/* Open an FD for the current battery charge. */
+/* Open an FD for the current battery charge.
+ * Returns -1 on error or if unused!
+ */
 static inline int open_bat_now(void){
 #if DISPLAY_BAT
 
@@ -103,7 +105,9 @@ static inline int open_bat_now(void){
 #endif
 }
 
-/* Open an FD for the full battery charge. */
+/* Open an FD for the full battery charge.
+ * Returns -1 on error or if unused!
+ */
 static inline int open_bat_full(void){
 #if DISPLAY_BAT
 
@@ -173,32 +177,35 @@ static inline int read_charge_file(const int fd){
  * charge_fd: the FD for the (current) charge file
  * charge_full_fd: the FD for the (max/full) charge file
  *
+ * The FDs must be negative if they shouldn't be used.
+ *
  * On success, return the charge level as a percentage.
  * Returns negative on failure.
  */
 static inline int battery_charge(const int charge_fd, const int charge_full_fd){
-#if DISPLAY_BAT
+	if(charge_fd < 0 || charge_full_fd < 0)
+		return -1;
+
+	/* TOOD: #if !DISPLAY_BAT an __assume_unreachable or something. */
 
 	const int charge = read_charge_file(charge_fd);
 	if(charge < 0)
-		return -1;
+		return -2;
 
 	const int fcharge = read_charge_file(charge_full_fd);
 	if(charge < 0)
-		return -2;
+		return -3;
 
 	return 100*charge/fcharge;
-
-#else /* !DISPLAY_BAT */
-
-	(void)charge_fd;
-	(void)charge_full_fd;
-
-	return -1;
-
-#endif
 }
 
+/* Print out the time.
+ *
+ * charge_fd: the FD for the current battery charge
+ * charge_full_fd: the FD for the full battery charge
+ *
+ * Returns 0 on success.
+ */
 static inline int print_time(const int charge_fd, const int charge_full_fd){
 	const time_t t = time(NULL);
 	struct tm * const tbuf = localtime(&t);
