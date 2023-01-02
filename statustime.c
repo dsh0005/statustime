@@ -37,6 +37,7 @@ static const long SLEEP_EXTRA_NS = 1000000L;
 #define BAT_STATUS BAT_PREFIX "/status"
 #endif
 
+/* Get the amount of time remaining before the top of the next minute. */
 static inline struct timespec time_until_minute(void){
 	struct timespec slp;
 
@@ -65,6 +66,8 @@ static inline struct timespec time_until_minute(void){
 	return slp;
 }
 
+/* Sleep until the top of the minute.
+ * Returns 0 on success. */
 static inline int sleep_until_minute(void){
 	int ret;
 	struct timespec slp = time_until_minute();
@@ -76,6 +79,7 @@ static inline int sleep_until_minute(void){
 	return ret;
 }
 
+/* Open an FD for the current battery charge. */
 static inline int open_bat_now(void){
 #if DISPLAY_BAT
 
@@ -99,6 +103,7 @@ static inline int open_bat_now(void){
 #endif
 }
 
+/* Open an FD for the full battery charge. */
 static inline int open_bat_full(void){
 #if DISPLAY_BAT
 
@@ -122,6 +127,13 @@ static inline int open_bat_full(void){
 #endif
 }
 
+/* Read out the charge from e.g. a sysfs file.
+ *
+ * Expects a text-formatted, base-10,
+ * nonnegative integer of 10 digits or less.
+ *
+ * Returns negative on failures.
+ */
 static inline int read_charge_file(const int fd){
 #if DISPLAY_BAT
 
@@ -156,6 +168,14 @@ static inline int read_charge_file(const int fd){
 #endif
 }
 
+/* Read out the battery charge.
+ *
+ * charge_fd: the FD for the (current) charge file
+ * charge_full_fd: the FD for the (max/full) charge file
+ *
+ * On success, return the charge level as a percentage.
+ * Returns negative on failure.
+ */
 static inline int battery_charge(const int charge_fd, const int charge_full_fd){
 #if DISPLAY_BAT
 
@@ -216,11 +236,15 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 	return 0;
 }
 
+/* Try to set up timers to have a bit less than 1 frame of slack. */
 static inline int timerslack_setup(void){
 #ifdef linux
+	/* NOTE: this value should change based on target framerate. */
 	if(prctl(PR_SET_TIMERSLACK, 1UL*10000000UL, 0UL, 0UL, 0UL))
 		return -1;
 #endif
+	/* Since it's just an optimization for power, not knowing
+	 * how to do it is still successful-ish. */
 	return 0;
 }
 
