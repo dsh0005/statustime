@@ -219,12 +219,13 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 
 #if DISPLAY_BAT
 	const int preflen = snprintf(sbuf, sizeof(sbuf), "%d%% | ", charge);
-	if(preflen < 0){
-		return 2;
-	}
 #else /* !DISPLAY_BAT */
 	const int preflen = 0;
 #endif
+
+	if(preflen < 0){
+		return 2;
+	}
 
 	const unsigned int upreflen = preflen;
 
