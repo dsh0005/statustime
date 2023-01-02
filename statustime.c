@@ -200,6 +200,33 @@ static inline int battery_charge(const int charge_fd, const int charge_full_fd){
 	return 100*charge/fcharge;
 }
 
+#if DISPLAY_BAT
+#define DISPLAY_BAT_FORMAT "%d%% | "
+#else
+#define DISPLAY_BAT_FORMAT ""
+#endif
+
+#define WITH_DIAGNOSTIC_SURPRESSIONS(surpressions, code) \
+	_Pragma("GCC diagnostic push") \
+	surpressions \
+	code \
+	_Pragma("GCC diagnostic pop")
+
+#define PRAGMA_STRINGY(prag) _Pragma(#prag)
+
+#define PRAGMA_NOWARN(warning) PRAGMA_STRINGY(GCC diagnostic ignored #warning)
+
+/* Yes, we _intentionally_ pass "" as the format sometimes.
+ * And yes, in that case we pass an extra argument.
+ * Although I haven't seen this one yet, be proactive in
+ * surpressing it.
+ */
+#define WITH_POSSIBLY_ZERO_OR_EXTRA_ARGS(code) \
+	WITH_DIAGNOSTIC_SURPRESSIONS( \
+		PRAGMA_NOWARN(-Wformat-zero-length) \
+		PRAGMA_NOWARN(-Wformat-extra-args), \
+		code)
+
 /* Print out the time.
  *
  * charge_fd: the FD for the current battery charge
@@ -217,11 +244,7 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 
 	const int charge = battery_charge(charge_fd, charge_full_fd);
 
-#if DISPLAY_BAT
-	const int preflen = snprintf(sbuf, sizeof(sbuf), "%d%% | ", charge);
-#else /* !DISPLAY_BAT */
-	const int preflen = 0;
-#endif
+	WITH_POSSIBLY_ZERO_OR_EXTRA_ARGS(const int preflen = snprintf(sbuf, sizeof(sbuf), DISPLAY_BAT_FORMAT, charge);)
 
 	if(preflen < 0){
 		return 2;
