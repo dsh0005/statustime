@@ -214,30 +214,28 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 
 	char sbuf[32];
 
-#if DISPLAY_BAT
 	const int charge = battery_charge(charge_fd, charge_full_fd);
+
+#if DISPLAY_BAT
 	const int preflen = snprintf(sbuf, sizeof(sbuf), "%d%% | ", charge);
 	if(preflen < 0){
 		return 2;
-	}else{
-		const unsigned int upreflen = preflen;
-		if(upreflen >= sizeof(sbuf)){
-			return 3;
-		}
 	}
 #else /* !DISPLAY_BAT */
-	(void)charge_fd;
-	(void)charge_full_fd;
-
 	const int preflen = 0;
 #endif
 
+	const unsigned int upreflen = preflen;
+	if(upreflen >= sizeof(sbuf)){
+		return 3;
+	}
+
 	size_t len;
-	if(!(len = strftime(sbuf+preflen, sizeof(sbuf)-preflen, "%F %R\n", tbuf)))
+	if(!(len = strftime(sbuf+upreflen, sizeof(sbuf)-preflen, "%F %R\n", tbuf)))
 		return 4;
 	sbuf[sizeof(sbuf)-1] = '\0';
 
-	if(write(STDOUT_FILENO, sbuf, preflen+len) != preflen+len)
+	if(write(STDOUT_FILENO, sbuf, upreflen+len) != upreflen+len)
 		return 5;
 
 	return 0;
