@@ -16,6 +16,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #ifdef linux
 #include <sys/prctl.h>
@@ -226,17 +227,31 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 #endif
 
 	const unsigned int upreflen = preflen;
-	if(upreflen >= sizeof(sbuf)){
+
+	if(upreflen >= sizeof(sbuf))
 		return 3;
-	}
 
 	size_t len;
 	if(!(len = strftime(sbuf+upreflen, sizeof(sbuf)-preflen, "%F %R\n", tbuf)))
 		return 4;
+
+	/* Forcefully terminate it out of habit. */
 	sbuf[sizeof(sbuf)-1] = '\0';
 
-	if(write(STDOUT_FILENO, sbuf, upreflen+len) != upreflen+len)
+	if(len >= sizeof(sbuf))
 		return 5;
+
+	/* FIXME: how to check that upreflen+len doesn't overflow? */
+	const size_t write_expect = upreflen+len;
+
+	/* Be paranoid. Make sure we can use the result from write(2). */
+	if(write_expect > SSIZE_MAX)
+		return 6;
+
+	const ssize_t swrite_expect = write_expect;
+
+	if(write(STDOUT_FILENO, sbuf, upreflen+len) != swrite_expect)
+		return 7;
 
 	return 0;
 }
