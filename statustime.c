@@ -38,6 +38,25 @@ static const long SLEEP_EXTRA_NS = 1000000L;
 #define BAT_STATUS BAT_PREFIX "/status"
 #endif
 
+#ifndef USE_AGGRESSIVE_UNREACHABLE
+#define USE_AGGRESSIVE_UNREACHABLE 0
+#endif
+
+#if USE_AGGRESSIVE_UNREACHABLE
+/* Use the really aggressive UB-level stuff */
+#define BAT_ONLY_PATH() do { \
+	if(!DISPLAY_BAT) \
+		__builtin_unreachable(); \
+} while(0)
+#else /* !USE_AGGRESSIVE_UNREACHABLE */
+/* Use assert */
+#include <assert.h>
+
+#define BAT_ONLY_PATH() do { \
+	assert(DISPLAY_BAT); \
+} while(0)
+#endif /* USE_AGGRESSIVE_UNREACHABLE */
+
 /* Get the amount of time remaining before the top of the next minute. */
 static inline struct timespec time_until_minute(void){
 	struct timespec slp;
@@ -187,7 +206,7 @@ static inline int battery_charge(const int charge_fd, const int charge_full_fd){
 	if(charge_fd < 0 || charge_full_fd < 0)
 		return -1;
 
-	/* TOOD: #if !DISPLAY_BAT an __assume_unreachable or something. */
+	BAT_ONLY_PATH();
 
 	const int charge = read_charge_file(charge_fd);
 	if(charge < 0)
