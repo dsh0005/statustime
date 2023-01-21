@@ -70,7 +70,7 @@ static inline struct timespec time_until_minute(void){
 	}
 
 	slp.tv_nsec += SLEEP_EXTRA_NS;
-	if(slp.tv_nsec >= 1000000000){
+	while(slp.tv_nsec >= 1000000000){
 		slp.tv_nsec -= 1000000000;
 		slp.tv_sec++;
 	}
