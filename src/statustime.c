@@ -9,13 +9,10 @@
  * it for yourself before assuming it's safe.
  */
 
-#include <threads.h>
 #include <time.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include <unistd.h>
-#include <fcntl.h>
 #include <limits.h>
 
 #include "timing.h"
