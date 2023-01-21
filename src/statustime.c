@@ -18,17 +18,11 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#ifdef linux
-#include <sys/prctl.h>
-#endif
+#include "timing.h"
 
 #ifndef DISPLAY_BAT
 #define DISPLAY_BAT 0
 #endif
-
-/* We need this, otherwise localtime/strftime return
- * the previous minute. Determined by trial and error. */
-static const long SLEEP_EXTRA_NS = 1000000L;
 
 #ifdef linux
 /* Filenames for battery printing. */
@@ -37,48 +31,6 @@ static const long SLEEP_EXTRA_NS = 1000000L;
 #define BAT_NOW BAT_PREFIX "/charge_now"
 #define BAT_STATUS BAT_PREFIX "/status"
 #endif
-
-/* Get the amount of time remaining before the top of the next minute. */
-static inline struct timespec time_until_minute(void){
-	struct timespec slp;
-
-	if(!timespec_get(&slp, TIME_UTC)){
-		slp.tv_sec = -1;
-		slp.tv_nsec = -1;
-		return slp;
-	}
-
-	slp.tv_sec = 60 - (slp.tv_sec % 60);
-	if(slp.tv_nsec){
-		slp.tv_nsec = 1000000000 - slp.tv_nsec;
-		if(slp.tv_sec){
-			slp.tv_sec--;
-		}else{
-			slp.tv_sec = 59;
-		}
-	}
-
-	slp.tv_nsec += SLEEP_EXTRA_NS;
-	if(slp.tv_nsec >= 1000000000){
-		slp.tv_nsec -= 1000000000;
-		slp.tv_sec++;
-	}
-
-	return slp;
-}
-
-/* Sleep until the top of the minute.
- * Returns 0 on success. */
-static inline int sleep_until_minute(void){
-	int ret;
-	struct timespec slp = time_until_minute();
-
-	do{
-		ret = thrd_sleep(&slp, &slp);
-	}while(ret == -1);
-
-	return ret;
-}
 
 /* Open an FD for the current battery charge.
  * Returns -1 on error or if unused!
@@ -278,18 +230,6 @@ static inline int print_time(const int charge_fd, const int charge_full_fd){
 	if(write(STDOUT_FILENO, sbuf, upreflen+len) != swrite_expect)
 		return 7;
 
-	return 0;
-}
-
-/* Try to set up timers to have a bit less than 1 frame of slack. */
-static inline int timerslack_setup(void){
-#ifdef linux
-	/* NOTE: this value should change based on target framerate. */
-	if(prctl(PR_SET_TIMERSLACK, 1UL*10000000UL, 0UL, 0UL, 0UL))
-		return -1;
-#endif
-	/* Since it's just an optimization for power, not knowing
-	 * how to do it is still successful-ish. */
 	return 0;
 }
 
