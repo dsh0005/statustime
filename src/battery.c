@@ -17,7 +17,6 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <limits.h>
 
 #ifndef DISPLAY_BAT
 #define DISPLAY_BAT 0
