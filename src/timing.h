@@ -15,5 +15,6 @@
  * Returns 0 on success. */
 int sleep_until_minute(void);
 
-/* Try to set up timers to have a bit less than 1 frame of slack. */
+/* Try to set up timers to have a bit less than 1 frame of slack.
+ * Returns 0 on success. */
 int timerslack_setup(void);

@@ -28,12 +28,37 @@ static const long SLEEP_EXTRA_NS = 1000000L;
 static inline struct timespec time_until_minute(void){
 	struct timespec slp;
 
+	/* Get the current UTC time.
+	 *
+	 * NOTE: We're fundamentally assuming an integer number of seconds
+	 * offset from UTC. With a few exceptions (e.g. UT1), this has been
+	 * the case for more or less as long as people have been able to
+	 * keep time that accurately, AFAIK. */
 	if(!timespec_get(&slp, TIME_UTC)){
 		slp.tv_sec = -1;
 		slp.tv_nsec = -1;
 		return slp;
 	}
 
+	/* Calculate how long until the top of the next minute.
+	 *
+	 * NOTE: In the case of a (positive) leap second, we'll update
+	 * a second early then... maybe be wrong for... well, we should fire
+	 * a second later. It depends on how the system does it.
+	 *
+	 * NOTE: In the case of a negative leap second, we'll update a second
+	 * late. Oh well.
+	 *
+	 * TODO: Query the system for pending leap seconds?
+	 *
+	 * NOTE: We're assuming a multiple of 60 seconds offset from UTC,
+	 * which has been the case for most systems for a very long time.
+	 * Exceptions include UT1 (and other non-TAI synced systems) and
+	 * Dublin Mean Time prior to 1916-10-01T0200Z. Use e.g.:
+	 * grep -e '[[:digit:]]\{1,2\}:[[:digit:]]\{1,2\}:[[:digit:]]\{1,2\}' -n
+	 * over your tzdata sources to find some. In my copy of 2022g, it says
+	 * that Africa/Monrovia was the last, at 0:44:30 until 1972-01-07!
+	 */
 	slp.tv_sec = 60 - (slp.tv_sec % 60);
 	if(slp.tv_nsec){
 		slp.tv_nsec = 1000000000 - slp.tv_nsec;
