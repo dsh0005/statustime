@@ -11,6 +11,9 @@
  * This file is for timing related functionality.
  */
 
+#ifndef STATUSTIME_TIMING_H
+#define STATUSTIME_TIMING_H 1
+
 /* Sleep until the top of the minute.
  * Returns 0 on success. */
 int sleep_until_minute(void);
@@ -18,3 +21,5 @@ int sleep_until_minute(void);
 /* Try to set up timers to have a bit less than 1 frame of slack.
  * Returns 0 on success. */
 int timerslack_setup(void);
+
+#endif /* STATUSTIME_TIMING_H */

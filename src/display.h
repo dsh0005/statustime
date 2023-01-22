@@ -11,6 +11,9 @@
  * This file is for display/printing the status widget.
  */
 
+#ifndef STATUSTIME_DISPLAY_H
+#define STATUSTIME_DISPLAY_H 1
+
 /* Print out the time.
  *
  * charge_fd: the FD for the current battery charge
@@ -19,3 +22,5 @@
  * Returns 0 on success.
  */
 int print_time(int charge_fd, int charge_full_fd);
+
+#endif /* STATUSTIME_DISPLAY_H */

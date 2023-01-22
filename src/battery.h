@@ -11,6 +11,9 @@
  * This file is for battery related functionality.
  */
 
+#ifndef STATUSTIME_BATTERY_H
+#define STATUSTIME_BATTERY_H 1
+
 #include <stddef.h>
 
 /* Open an FD for the current battery charge.
@@ -31,3 +34,5 @@ int open_bat_full(void);
  * Returns the nonnegative number of characters printed on success.
  */
 int snprintbat(char* restrict buf, size_t len, int charge_fd, int charge_full_fd);
+
+#endif /* STATUSTIME_BATTERY_H */
