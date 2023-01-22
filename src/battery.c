@@ -33,7 +33,7 @@
 /* Open an FD for the current battery charge.
  * Returns -1 on error or if unused!
  */
-int open_bat_now(void){
+static inline int open_bat_now(void){
 #if DISPLAY_BAT
 
 #ifdef linux
@@ -59,7 +59,7 @@ int open_bat_now(void){
 /* Open an FD for the full battery charge.
  * Returns -1 on error or if unused!
  */
-int open_bat_full(void){
+static inline int open_bat_full(void){
 #if DISPLAY_BAT
 
 #ifdef linux
@@ -123,6 +123,23 @@ static inline int read_charge_file(const int fd){
 #endif
 }
 
+/* Set up the battery subsystem. */
+int battery_setup(struct battery_context * const ctx){
+	ctx->bat_now_fd = open_bat_now();
+	ctx->bat_full_fd = open_bat_full();
+
+	/* Sanity checks for both configs are basically mirrored. */
+#if DISPLAY_BAT
+	if(ctx->bat_now_fd == -1 || ctx->bat_full_fd == -1)
+		return 1;
+#else /* !DISPLAY_BAT */
+	if(ctx->bat_now_fd != -1 || ctx->bat_full_fd != -1)
+		return 2;
+#endif /* DISPLAY_BAT */
+
+	return 0;
+}
+
 /* Read out the battery charge.
  *
  * charge_fd: the FD for the (current) charge file
@@ -179,14 +196,9 @@ static inline int battery_charge(const int charge_fd, const int charge_full_fd){
 		code)
 
 /* Print out the battery percentage into a string buffer.
- *
- * charge_fd: the FD for the current battery charge
- * charge_full_fd: the FD for the full battery charge
- *
- * Returns the nonnegative number of characters printed on success.
  */
-int snprintbat(char* restrict const buf, const size_t len, const int charge_fd, const int charge_full_fd){
-	const int charge = battery_charge(charge_fd, charge_full_fd);
+int snprintbat(char* restrict const buf, const size_t len, const struct battery_context ctx){
+	const int charge = battery_charge(ctx.bat_now_fd, ctx.bat_full_fd);
 
 	WITH_POSSIBLY_ZERO_OR_EXTRA_ARGS(const int preflen = snprintf(buf, len, DISPLAY_BAT_FORMAT, charge);)
 

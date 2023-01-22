@@ -91,7 +91,7 @@ int sleep_until_minute(void){
 }
 
 /* Try to set up timers to have a bit less than 1 frame of slack. */
-int timerslack_setup(void){
+static inline int timerslack_setup(void){
 #ifdef linux
 	/* NOTE: this value should change based on target framerate. */
 	if(prctl(PR_SET_TIMERSLACK, 1UL*10000000UL, 0UL, 0UL, 0UL))
@@ -99,5 +99,18 @@ int timerslack_setup(void){
 #endif
 	/* Since it's just an optimization for power, not knowing
 	 * how to do it is still successful-ish. */
+	return 0;
+}
+
+/* Set up the subsystem. */
+int timing_setup(struct timing_context * const context){
+	if(!context)
+		return 1;
+
+	if(timerslack_setup())
+		return 2;
+
+	/* TODO: fill in the context */
+
 	return 0;
 }

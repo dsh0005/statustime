@@ -23,19 +23,16 @@ int main(int argc, char ** argv){
 	(void)argc;
 	(void)argv;
 
-	if(timerslack_setup())
+	struct timing_context time_ctx = {0};
+	if(timing_setup(&time_ctx))
 		return EXIT_FAILURE;
 
-	const int bat_now_fd = open_bat_now();
-	const int bat_full_fd = open_bat_full();
-
-#if DISPLAY_BAT
-	if(bat_now_fd < 0 || bat_full_fd < 0)
+	struct battery_context bat_ctx = {0};
+	if(battery_setup(&bat_ctx))
 		return EXIT_FAILURE;
-#endif
 
 	while(1){
-		if(print_time(bat_now_fd, bat_full_fd))
+		if(print_time(bat_ctx))
 			break;
 		if(sleep_until_minute())
 			break;

@@ -14,13 +14,14 @@
 #ifndef STATUSTIME_DISPLAY_H
 #define STATUSTIME_DISPLAY_H 1
 
+#include "battery.h"
+
 /* Print out the time.
  *
- * charge_fd: the FD for the current battery charge
- * charge_full_fd: the FD for the full battery charge
+ * bat_context: the battery subsystem context
  *
  * Returns 0 on success.
  */
-int print_time(int charge_fd, int charge_full_fd);
+int print_time(struct battery_context bat_context);
 
 #endif /* STATUSTIME_DISPLAY_H */

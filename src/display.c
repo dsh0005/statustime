@@ -24,13 +24,8 @@
 #endif
 
 /* Print out the time.
- *
- * charge_fd: the FD for the current battery charge
- * charge_full_fd: the FD for the full battery charge
- *
- * Returns 0 on success.
  */
-int print_time(const int charge_fd, const int charge_full_fd){
+int print_time(const struct battery_context bat_ctx){
 	const time_t t = time(NULL);
 	struct tm * const tbuf = localtime(&t);
 	if(!tbuf)
@@ -38,7 +33,7 @@ int print_time(const int charge_fd, const int charge_full_fd){
 
 	char sbuf[32];
 
-	const int preflen = snprintbat(sbuf, sizeof(sbuf), charge_fd, charge_full_fd);
+	const int preflen = snprintbat(sbuf, sizeof(sbuf), bat_ctx);
 
 	if(preflen < 0){
 		return 2;

@@ -14,12 +14,25 @@
 #ifndef STATUSTIME_TIMING_H
 #define STATUSTIME_TIMING_H 1
 
+/* Timing subsystem context/state struct.
+ *
+ * Contains stuff relating to watching for timezone changes, currently.
+ */
+struct timing_context {
+	int localtime_link_fd;
+	int timezone_fd;
+};
+
 /* Sleep until the top of the minute.
  * Returns 0 on success. */
 int sleep_until_minute(void);
 
-/* Try to set up timers to have a bit less than 1 frame of slack.
- * Returns 0 on success. */
-int timerslack_setup(void);
+/* Set up the timing subsystem.
+ *
+ * context: an instance of timing_context that this will fill in.
+ *
+ * Returns 0 on success.
+ */
+int timing_setup(struct timing_context *context);
 
 #endif /* STATUSTIME_TIMING_H */

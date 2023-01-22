@@ -16,23 +16,29 @@
 
 #include <stddef.h>
 
-/* Open an FD for the current battery charge.
- * Returns -1 on error or if unused!
+/* Battery subsystem context/state stuct.
+ *
+ * Contains stuff relating to reading battery state.
  */
-int open_bat_now(void);
+struct battery_context {
+	int bat_now_fd;
+	int bat_full_fd;
+};
 
-/* Open an FD for the full battery charge.
- * Returns -1 on error or if unused!
+/* Set up the battery subsystem.
+ *
+ * context: an instance of battery_context that this will fill in.
+ *
+ * Returns 0 on success.
  */
-int open_bat_full(void);
+int battery_setup(struct battery_context *context);
 
 /* Print out the battery percentage into a string buffer.
  *
- * charge_fd: the FD for the current battery charge
- * charge_full_fd: the FD for the full battery charge
+ * context: the battery subsystem context
  *
  * Returns the nonnegative number of characters printed on success.
  */
-int snprintbat(char* restrict buf, size_t len, int charge_fd, int charge_full_fd);
+int snprintbat(char* restrict buf, size_t len, struct battery_context context);
 
 #endif /* STATUSTIME_BATTERY_H */
