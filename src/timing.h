@@ -14,18 +14,33 @@
 #ifndef STATUSTIME_TIMING_H
 #define STATUSTIME_TIMING_H 1
 
+#include <sys/stat.h>
+
 /* Timing subsystem context/state struct.
  *
  * Contains stuff relating to watching for timezone changes, currently.
  */
 struct timing_context {
 	int localtime_link_fd;
+	struct stat localtime_link_stat;
 	int timezone_fd;
+	struct stat timezone_stat;
 };
 
 /* Sleep until the top of the minute.
  * Returns 0 on success. */
 int sleep_until_minute(void);
+
+/* Attempt to detect if the timezone has changed.
+ * TODO: changed since when?
+ *
+ * context: pointer to the timing subsystem context.
+ *
+ * Returns 0 if the timezone (probably) hasn't changed.
+ * Returns 1 if the timezone (probably) changed.
+ * Returns negative on errors.
+ */
+int has_timezone_changed(struct timing_context * context);
 
 /* Set up the timing subsystem.
  *

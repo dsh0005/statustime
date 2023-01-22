@@ -10,6 +10,9 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
+
+#include <unistd.h>
 
 #include "timing.h"
 #include "battery.h"
@@ -20,9 +23,6 @@
 #endif
 
 int main(int argc, char ** argv){
-	(void)argc;
-	(void)argv;
-
 	struct timing_context time_ctx = {0};
 	if(timing_setup(&time_ctx))
 		return EXIT_FAILURE;
@@ -36,6 +36,28 @@ int main(int argc, char ** argv){
 			break;
 		if(sleep_until_minute())
 			break;
+
+		/* Check for timezone change.
+		 *
+		 * Yeah, glibc does this for us, but musl doesn't, and I don't want
+		 * to assume other libcs do, either. Getting localtime(3) to use
+		 * the new timezone might be difficult, but we don't have much state,
+		 * so we can just re-exec ourselves. */
+		const int tz_change = has_timezone_changed(&time_ctx);
+		if(tz_change < 0){
+			return EXIT_FAILURE;
+		}else if(tz_change){
+			fputs("detected timezone change, re-execing\n", stderr);
+			/* TODO: exec ourselves */
+			if(argc){
+				execvp(argv[0], argv);
+				perror("re-exec failed");
+				return EXIT_FAILURE;
+			}else{
+				fputs("argc == 0, cannot re-exec", stderr);
+				return EXIT_FAILURE;
+			}
+		}
 	}
 	return EXIT_FAILURE;
 }
