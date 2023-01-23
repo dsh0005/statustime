@@ -21,9 +21,6 @@
  * Contains stuff relating to watching for timezone changes, currently.
  */
 struct timing_context {
-	int localtime_link_fd;
-	struct stat localtime_link_stat;
-	int timezone_fd;
 	struct stat timezone_stat;
 };
 
