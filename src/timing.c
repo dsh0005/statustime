@@ -13,7 +13,6 @@
 #include "timing.h"
 
 #include <stdbool.h>
-#include <threads.h>
 #include <time.h>
 
 #include <fcntl.h>
@@ -28,8 +27,8 @@
  * the previous minute. Determined by trial and error. */
 static const long SLEEP_EXTRA_NS = 1000000L;
 
-/* Get the amount of time remaining before the top of the next minute. */
-static inline struct timespec time_until_minute(void){
+/* Get the amount of time since epoch at the top of the next minute. */
+static inline struct timespec time_next_minute(void){
 	struct timespec slp;
 
 	/* Get the current UTC time.
@@ -38,7 +37,7 @@ static inline struct timespec time_until_minute(void){
 	 * offset from UTC. With a few exceptions (e.g. UT1), this has been
 	 * the case for more or less as long as people have been able to
 	 * keep time that accurately, AFAIK. */
-	if(!timespec_get(&slp, TIME_UTC)){
+	if(clock_gettime(CLOCK_REALTIME, &slp)){
 		slp.tv_sec = -1;
 		slp.tv_nsec = -1;
 		return slp;
@@ -63,15 +62,11 @@ static inline struct timespec time_until_minute(void){
 	 * over your tzdata sources to find some. In my copy of 2022g, it says
 	 * that Africa/Monrovia was the last, at 0:44:30 until 1972-01-07!
 	 */
-	slp.tv_sec = 60 - (slp.tv_sec % 60);
 	if(slp.tv_nsec){
-		slp.tv_nsec = 1000000000 - slp.tv_nsec;
-		if(slp.tv_sec){
-			slp.tv_sec--;
-		}else{
-			slp.tv_sec = 59;
-		}
+		slp.tv_sec++;
+		slp.tv_nsec = 0;
 	}
+	slp.tv_sec += 60 - (slp.tv_sec % 60);
 
 	slp.tv_nsec += SLEEP_EXTRA_NS;
 	while(slp.tv_nsec >= 1000000000){
@@ -85,11 +80,10 @@ static inline struct timespec time_until_minute(void){
 /* Sleep until the top of the minute. */
 int sleep_until_minute(void){
 	int ret;
-	struct timespec slp = time_until_minute();
+	struct timespec next_min = time_next_minute();
 
-	do{
-		ret = thrd_sleep(&slp, &slp);
-	}while(ret == -1);
+	ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME,
+		&next_min, NULL);
 
 	return ret;
 }
