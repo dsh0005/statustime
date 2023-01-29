@@ -34,7 +34,7 @@ int main(int argc, char ** argv){
 	while(1){
 		if(print_time(bat_ctx))
 			break;
-		if(sleep_until_minute())
+		if(sleep_until_minute(&time_ctx))
 			break;
 
 		/* Check for timezone change.

@@ -14,7 +14,9 @@
 
 #include <stdbool.h>
 #include <time.h>
+#include <errno.h>
 
+#include <signal.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -78,12 +80,29 @@ static inline struct timespec time_next_minute(void){
 }
 
 /* Sleep until the top of the minute. */
-int sleep_until_minute(void){
+int sleep_until_minute(struct timing_context * const ctx){
 	int ret;
 	struct timespec next_min = time_next_minute();
 
+	/* Set a timer to check for the clock being adjusted back. */
+	struct itimerspec oversleep_time = {
+		{0}, /* no repeats */
+		{61, 0}, /* 61 seconds from now */
+	};
+	if(timer_settime(ctx->adjcheck_timer, 0, &oversleep_time, NULL))
+		return 1;
+
 	ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME,
 		&next_min, NULL);
+
+	/* Being interrupted is sort of successful. */
+	if(ret == EINTR)
+		ret = 0;
+
+	/* Clear the oversleep timer */
+	oversleep_time = (struct itimerspec){{0}, {0}};
+	if(timer_settime(ctx->adjcheck_timer, 0, &oversleep_time, NULL))
+		return 2;
 
 	return ret;
 }
@@ -136,6 +155,31 @@ static inline int timerslack_setup(void){
 	return 0;
 }
 
+/* Our alarm signal handler.
+ * We actually take advantage of not restarting the sleep syscall
+ * to get a tz change or clock adjustment check earlier.
+ */
+static void alarm_handler(
+		const int signum,
+		siginfo_t * const info,
+		void * const ctx){
+	/* don't care */
+	(void)signum;
+	(void)ctx;
+
+	/* We could check these if we wanted. */
+	/* info.si_code == SI_TIMER; */
+	/* info.si_value.sival_int; */
+	/* But we don't care. */
+	(void)info;
+}
+
+#ifdef linux
+#define PREFERRED_ADJCHECK_CLOCK CLOCK_BOOTTIME
+#else
+#define PREFERRED_ADJCHECK_CLOCK CLOCK_MONOTONIC
+#endif
+
 /* Set up the subsystem. */
 int timing_setup(struct timing_context * const context){
 	if(!context)
@@ -150,6 +194,20 @@ int timing_setup(struct timing_context * const context){
 
 	/* Store it and we're done with this part. */
 	context->timezone_stat = tz_stat;
+
+	/* Set up our alarm handler. */
+	struct sigaction alrm_handler_info = {0};
+	alrm_handler_info.sa_sigaction = alarm_handler;
+	alrm_handler_info.sa_flags = SA_SIGINFO;
+
+	/* Set the alarm signal handler to our handler. */
+	if(sigaction(SIGALRM, &alrm_handler_info, NULL))
+		return 4;
+
+	/* Create the timer that will call our alarm handler. */
+	if(timer_create(PREFERRED_ADJCHECK_CLOCK,
+	                NULL, &context->adjcheck_timer))
+	  return 5;
 
 	return 0;
 }

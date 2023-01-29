@@ -14,6 +14,8 @@
 #ifndef STATUSTIME_TIMING_H
 #define STATUSTIME_TIMING_H 1
 
+#include <time.h>
+
 #include <sys/stat.h>
 
 /* Timing subsystem context/state struct.
@@ -22,11 +24,15 @@
  */
 struct timing_context {
 	struct stat timezone_stat;
+	timer_t adjcheck_timer;
 };
 
 /* Sleep until the top of the minute.
+ *
+ * context: pointer to the timing subsystem context.
+ *
  * Returns 0 on success. */
-int sleep_until_minute(void);
+int sleep_until_minute(struct timing_context * context);
 
 /* Attempt to detect if the timezone has changed.
  * TODO: changed since when?
